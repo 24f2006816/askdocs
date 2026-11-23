@@ -8,6 +8,7 @@ much more precisely, so we run it on the top ~20 candidates only.
 from __future__ import annotations
 
 import logging
+import os
 from dataclasses import replace
 from typing import Protocol
 
@@ -28,7 +29,7 @@ class CrossEncoderReranker:
     def __init__(self, model_name: str) -> None:
         from sentence_transformers import CrossEncoder
 
-        self._model = CrossEncoder(model_name)
+        self._model = CrossEncoder(model_name, device=os.getenv("MODEL_DEVICE") or None)
         self.name = model_name
 
     def scores(self, query: str, passages: list[str]) -> list[float]:

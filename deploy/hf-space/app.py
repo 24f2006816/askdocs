@@ -3,9 +3,18 @@
 The Space holds only this file, requirements.txt and README.md. At startup it downloads the latest
 AskDocs code from GitHub, then serves the FastAPI app on port 7860. Restarting the Space picks up
 new commits, and no Hugging Face token has to be stored anywhere.
+
+Free Hugging Face accounts can only host Spaces on ZeroGPU hardware. AskDocs runs on the CPU side
+of that machine: it registers one trivial GPU function and reports startup through the `spaces`
+middleware, which is what ZeroGPU requires before it lets an app serve traffic.
 """
 
 from __future__ import annotations
+
+try:  # ZeroGPU requires `spaces` to be imported before torch.
+    import spaces
+except ImportError:  # running outside Hugging Face
+    spaces = None
 
 import io
 import os
@@ -17,6 +26,13 @@ from pathlib import Path
 REPO = os.getenv("ASKDOCS_REPO", "24f2006816/askdocs")
 BRANCH = os.getenv("ASKDOCS_BRANCH", "main")
 SOURCE_DIR = Path(__file__).resolve().parent / "askdocs-src"
+
+if spaces is not None:
+
+    @spaces.GPU(duration=5)
+    def gpu_check() -> bool:
+        """Never called by the app; ZeroGPU only needs one registered GPU function."""
+        return True
 
 
 def download_source() -> None:
@@ -43,6 +59,7 @@ def main() -> None:
     # Public demo defaults; Space variables and secrets (e.g. GEMINI_API_KEY) still take precedence.
     os.environ.setdefault("ALLOW_UPLOADS", "false")
     os.environ.setdefault("RERANKER_MODEL", "cross-encoder/ms-marco-MiniLM-L-6-v2")
+    os.environ.setdefault("MODEL_DEVICE", "cpu")  # ZeroGPU reports CUDA as available; models stay on CPU
     # Make the downloaded "app" package win over this file, which is also called app.py.
     here = str(Path(__file__).resolve().parent)
     sys.path[:] = [p for p in sys.path if p not in ("", here)]
@@ -51,7 +68,13 @@ def main() -> None:
 
     import uvicorn
 
-    uvicorn.run("app.api:app", host="0.0.0.0", port=int(os.getenv("PORT", "7860")),
+    from app.api import app as askdocs_app
+
+    asgi_app = askdocs_app
+    if spaces is not None and hasattr(spaces, "zero"):
+        asgi_app = spaces.zero.ZeroGPUMiddleware(askdocs_app)  # reports startup to ZeroGPU
+
+    uvicorn.run(asgi_app, host="0.0.0.0", port=int(os.getenv("PORT", "7860")),
                 proxy_headers=True, forwarded_allow_ips="*")
 
 

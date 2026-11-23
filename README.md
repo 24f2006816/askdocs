@@ -130,6 +130,7 @@ All settings come from environment variables or `.env`; see [`.env.example`](.en
 | `RERANKER_MODEL` / `RERANK_CANDIDATES` | off / 20 | Cross-encoder for second-stage ranking |
 | `CHUNK_SIZE` / `CHUNK_OVERLAP` / `TOP_K` | 700 / 120 / 4 | Chunking and passages sent to the LLM |
 | `MIN_SIMILARITY` / `MIN_KEYWORD_COVERAGE` | 0.30 / 0.30 | Refusal thresholds |
+| `MODEL_DEVICE` | auto | Device for the embedding and reranker models, e.g. `cpu` |
 | `ALLOW_UPLOADS` | true | `false` makes the app read-only (used by the public demo) |
 | `ADMIN_TOKEN` | none | Required for uploads and deletes when set |
 | `RATE_LIMIT_PER_MINUTE` | 30 | Chat and feedback requests per client (0 = unlimited) |
@@ -154,7 +155,7 @@ The image installs CPU-only PyTorch, downloads the embedding and reranker models
 
 Set the repository variable `HF_SPACE` to deploy under a different name. You can also deploy from your machine with `HF_TOKEN=... make deploy`.
 
-**Hugging Face Spaces without a token.** Create a free Space (Gradio SDK, CPU basic) and add the files in [`deploy/hf-space`](deploy/hf-space). Its `app.py` downloads this repository at startup and serves the app read-only (`ALLOW_UPLOADS=false`). Restart the Space to pick up new commits. This is how the public demo runs.
+**Hugging Face Spaces without a token.** Create a free Space (Gradio SDK; free accounts get ZeroGPU hardware) and add the files in [`deploy/hf-space`](deploy/hf-space). Its `app.py` downloads this repository at startup and serves the app read-only (`ALLOW_UPLOADS=false`). Restart the Space to pick up new commits. This is how the public demo runs.
 
 ## Security
 

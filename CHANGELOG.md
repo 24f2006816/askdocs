@@ -3,7 +3,8 @@
 ## 2.0.1
 
 - `ALLOW_UPLOADS=false` makes the app read-only; the UI hides the upload button and says so.
-- `deploy/hf-space`: a token-free Hugging Face Space that downloads this repository at startup.
+- `deploy/hf-space`: a token-free Hugging Face Space that downloads this repository at startup and runs on the free ZeroGPU tier.
+- `MODEL_DEVICE` pins the embedding and reranker models to a device (e.g. `cpu`).
 
 ## 2.0.0
 
