@@ -1,0 +1,36 @@
+{"question": "How much does the full GATE DA course cost?", "source": "fee-and-refund-policy.pdf", "page": 1}
+{"question": "What is the price of the weekend batch?", "source": "fee-and-refund-policy.pdf", "page": 1}
+{"question": "Is the test series sold separately?", "source": "fee-and-refund-policy.pdf", "page": 1}
+{"question": "Can I split the payment into parts?", "source": "fee-and-refund-policy.pdf", "page": 2}
+{"question": "What is the penalty for paying an instalment late?", "source": "fee-and-refund-policy.pdf", "page": 2}
+{"question": "How do I get a scholarship?", "source": "fee-and-refund-policy.pdf", "page": 2}
+{"question": "I scored 650 in GATE last year. Do I get a discount?", "source": "fee-and-refund-policy.pdf", "page": 2}
+{"question": "Can I combine two discounts?", "source": "fee-and-refund-policy.pdf", "page": 2}
+{"question": "I want to quit after three weeks. Will I get my money back?", "source": "fee-and-refund-policy.pdf", "page": 3}
+{"question": "How long does it take to receive a refund?", "source": "fee-and-refund-policy.pdf", "page": 3}
+{"question": "Is the crash course refundable?", "source": "fee-and-refund-policy.pdf", "page": 3}
+{"question": "Can I postpone my course to next year?", "source": "fee-and-refund-policy.pdf", "page": 4}
+{"question": "Can I give my seat to a friend?", "source": "fee-and-refund-policy.pdf", "page": 4}
+{"question": "What are the timings of the evening batch?", "source": "student-handbook.md", "section": "Batches and timings"}
+{"question": "When does the CR-27 crash course start?", "source": "student-handbook.md", "section": "Batches and timings"}
+{"question": "Can I change from the weekend batch to the evening batch?", "source": "student-handbook.md", "section": "Batches and timings"}
+{"question": "When can I ask my doubts?", "source": "student-handbook.md", "section": "Doubt-clearing sessions"}
+{"question": "How quickly do TAs answer forum questions?", "source": "student-handbook.md", "section": "Doubt-clearing sessions"}
+{"question": "What attendance do I need for the certificate?", "source": "student-handbook.md", "section": "Attendance"}
+{"question": "When are class recordings uploaded?", "source": "student-handbook.md", "section": "Attendance"}
+{"question": "How many practice problems are in the question bank?", "source": "student-handbook.md", "section": "Study material"}
+{"question": "I missed this week's mock test. Can I still take it?", "source": "student-handbook.md", "section": "Mock tests"}
+{"question": "How many mock tests are there?", "source": "student-handbook.md", "section": "Mock tests"}
+{"question": "Do I need a laptop?", "source": "faq.txt", "contains": "laptop"}
+{"question": "How long are recordings available?", "source": "faq.txt", "contains": "31 May"}
+{"question": "Is there a free trial class?", "source": "faq.txt", "contains": "demo classes"}
+{"question": "Which topics are taught in the GATE DA course?", "source": "faq.txt", "contains": "Probability and statistics"}
+{"question": "Do you guarantee a job?", "source": "faq.txt", "contains": "placement guarantees"}
+{"question": "How many students are in a classroom batch?", "source": "faq.txt", "contains": "capped at 60"}
+{"question": "How can I get a GST invoice?", "source": "faq.txt", "contains": "invoice is emailed"}
+{"question": "Who won the 2023 cricket world cup?", "out_of_scope": true}
+{"question": "What is the capital of France?", "out_of_scope": true}
+{"question": "How do I reset my Gmail password?", "out_of_scope": true}
+{"question": "What is the syllabus for JEE Advanced?", "out_of_scope": true}
+{"question": "What is the hostel fee at IIT Madras?", "out_of_scope": true}
+{"question": "Recommend a good laptop under 50,000 rupees.", "out_of_scope": true}

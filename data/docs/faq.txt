@@ -1,0 +1,26 @@
+NORTHSTAR ACADEMY: FREQUENTLY ASKED QUESTIONS
+(Sample document for the AskDocs demo. Northstar Academy is a fictional institute.)
+
+Q: Do I need a laptop for the online course?
+A: A laptop or desktop computer is recommended for mock tests. Live classes and recordings also work on the Northstar Android and iOS apps.
+
+Q: How long can I watch the recorded lectures?
+A: Recordings stay available until 31 May of the year after your GATE exam. After that, access can be extended for 6 months for 1,500 rupees.
+
+Q: Is there a free demo class?
+A: Yes. Two free demo classes are held every Saturday at 5:00 PM IST. Register on the academy website to get the joining link.
+
+Q: Which subjects does the GATE DA course cover?
+A: Probability and statistics, linear algebra, calculus and optimisation, programming and data structures in Python, algorithms, database management and warehousing, machine learning, artificial intelligence, and general aptitude.
+
+Q: Do you guarantee placements or internships?
+A: No. Northstar does not offer placement guarantees. Students in the top 20% of the mock test ranking are invited to a resume review workshop held every March.
+
+Q: Can I prepare for the IIT Madras BS foundation courses here?
+A: Yes. A weekday batch covers Mathematics 1, Statistics 1 and Computational Thinking. It costs 6,000 rupees per subject per term.
+
+Q: How big are the classes?
+A: Classroom batches are capped at 60 students. Online live classes have no cap, but questions are moderated by two teaching assistants.
+
+Q: How do I get a GST invoice?
+A: An invoice is emailed automatically within 48 hours of every payment. Write to the student office if the invoice needs a company name or GST number.

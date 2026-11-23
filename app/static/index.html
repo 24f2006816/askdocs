@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="AskDocs: chat with your documents and get answers with page-level citations.">
+<title>AskDocs · Chat with your documents</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%233b5bdb'/%3E%3Ctext x='16' y='22' font-size='18' font-family='Arial' font-weight='700' fill='white' text-anchor='middle'%3EA%3C/text%3E%3C/svg%3E">
+<style>
+  :root {
+    --bg: #f5f6fa; --panel: #ffffff; --panel-2: #fbfcfe; --ink: #161a2b; --muted: #5d6478; --line: #e3e6ef;
+    --accent: #3b5bdb; --accent-ink: #ffffff; --accent-soft: #e8edff; --cited: #f4f6ff; --cited-line: #b9c6ff;
+    --ok: #1f8a4c; --danger: #c92a2a; --radius: 14px;
+    --shadow: 0 1px 2px rgba(20,25,45,.06), 0 6px 24px rgba(20,25,45,.06);
+  }
+  [data-theme="dark"] {
+    --bg: #0f1220; --panel: #171b2e; --panel-2: #1c2136; --ink: #e8eaf3; --muted: #9aa1b8; --line: #2a3050;
+    --accent: #6d8bff; --accent-ink: #0f1220; --accent-soft: #24305a; --cited: #1f2747; --cited-line: #4458a8;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 28px rgba(0,0,0,.35);
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { margin: 0; font: 15px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--ink);
+         background: var(--bg); display: flex; overflow: hidden; }
+  button { font: inherit; cursor: pointer; color: inherit; }
+  a { color: var(--accent); }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+
+  /* Sidebar */
+  aside { width: 290px; flex-shrink: 0; background: var(--panel); border-right: 1px solid var(--line);
+          display: flex; flex-direction: column; padding: 22px 18px; gap: 18px; z-index: 20; }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .logo { width: 38px; height: 38px; border-radius: 10px; background: var(--accent); color: var(--accent-ink);
+          display: grid; place-items: center; font-weight: 800; font-size: 18px; }
+  .brand h1 { font-size: 18px; margin: 0; line-height: 1.2; }
+  .brand p { margin: 0; font-size: 12.5px; color: var(--muted); }
+  .label { font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
+           color: var(--muted); margin: 0 0 8px; }
+  #docs { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px;
+          overflow-y: auto; max-height: 38vh; }
+  #docs li { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid var(--line);
+             border-radius: 10px; font-size: 13.5px; background: var(--panel-2); }
+  #docs .name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #docs .count { color: var(--muted); white-space: nowrap; font-size: 12.5px; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid var(--line);
+         background: var(--panel); border-radius: 10px; padding: 9px 12px; text-align: center; font-size: 14px; }
+  .btn:hover { border-color: var(--accent); color: var(--accent); }
+  .btn.block { width: 100%; }
+  .btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  .btn.primary:hover { filter: brightness(1.08); color: var(--accent-ink); }
+  .btn:disabled { opacity: .55; cursor: not-allowed; }
+  .icon-btn { border: 1px solid transparent; background: transparent; border-radius: 8px; padding: 6px;
+              display: inline-grid; place-items: center; color: var(--muted); }
+  .icon-btn:hover { border-color: var(--line); color: var(--ink); }
+  .icon-btn.active { color: var(--accent); }
+  svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  #upload { display: none; }
+  .hint { font-size: 12px; color: var(--muted); margin: -10px 0 0; }
+  .status { margin-top: auto; font-size: 12.5px; color: var(--muted); display: grid; gap: 4px; }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--ok); margin-right: 6px; }
+
+  /* Main */
+  main { flex: 1; display: flex; flex-direction: column; min-width: 0; height: 100vh; }
+  header { padding: 14px 28px; border-bottom: 1px solid var(--line); background: var(--panel);
+           display: flex; align-items: center; gap: 12px; }
+  header .titles { flex: 1; min-width: 0; }
+  header h2 { margin: 0; font-size: 17px; }
+  header p { margin: 1px 0 0; color: var(--muted); font-size: 13px; }
+  #menu { display: none; }
+  #messages { flex: 1; overflow-y: auto; padding: 26px 28px; display: flex; flex-direction: column; gap: 18px;
+              scroll-behavior: smooth; }
+  .empty { margin: auto; text-align: center; max-width: 600px; color: var(--muted); }
+  .empty h3 { color: var(--ink); font-size: 21px; margin: 0 0 6px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 18px; }
+  .chip { border: 1px solid var(--line); background: var(--panel); border-radius: 999px; padding: 8px 14px; font-size: 13.5px; }
+  .chip:hover { border-color: var(--accent); color: var(--accent); }
+
+  .msg { max-width: 780px; width: fit-content; }
+  .msg.user { align-self: flex-end; background: var(--accent); color: var(--accent-ink); padding: 10px 16px;
+              border-radius: var(--radius) var(--radius) 4px var(--radius); white-space: pre-wrap; }
+  .msg.bot { align-self: flex-start; width: 100%; min-width: 0; background: var(--panel); border: 1px solid var(--line);
+             padding: 14px 18px 10px; border-radius: var(--radius) var(--radius) var(--radius) 4px; box-shadow: var(--shadow); }
+  .msg.bot.refused .answer { color: var(--muted); }
+  .answer p { margin: 0 0 8px; }
+  .answer ul, .answer ol { margin: 4px 0 8px; padding-left: 22px; }
+  .answer code { background: var(--accent-soft); padding: 1px 5px; border-radius: 5px; font-size: 13.5px; }
+  .answer.typing::after { content: ""; display: inline-block; width: 8px; height: 16px; margin-left: 2px;
+                          background: var(--accent); vertical-align: -3px; animation: blink 1s steps(2) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+  .thinking { color: var(--muted); font-style: italic; }
+  .cite { display: inline-block; min-width: 19px; padding: 0 5px; margin-left: 2px; border-radius: 6px; border: 0;
+          background: var(--accent-soft); color: var(--accent); font-size: 11.5px; font-weight: 700;
+          text-align: center; vertical-align: 2px; line-height: 18px; }
+  button.cite:hover { background: var(--accent); color: var(--accent-ink); }
+  .rewritten { font-size: 12.5px; color: var(--muted); margin: 4px 0 0; }
+  .sources { margin-top: 12px; display: grid; gap: 8px; min-width: 0; }
+  .source { border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; font-size: 13px; background: var(--panel-2);
+            min-width: 0; overflow: hidden; }
+  .source.cited { border-color: var(--cited-line); background: var(--cited); }
+  .source.flash { outline: 2px solid var(--accent); }
+  .source summary { cursor: pointer; display: flex; gap: 8px; align-items: center; list-style: none; min-width: 0; }
+  .source summary::-webkit-details-marker { display: none; }
+  .source .loc { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; flex: 1; }
+  .source .sim { color: var(--muted); font-size: 12px; white-space: nowrap; }
+  .source .snippet { margin: 8px 0 2px; color: var(--muted); white-space: pre-wrap; }
+  .actions { display: flex; align-items: center; gap: 4px; margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--line); }
+  .actions .meta { margin-left: auto; font-size: 12px; color: var(--muted); }
+  .toast { position: fixed; bottom: 92px; left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--bg);
+           padding: 8px 14px; border-radius: 10px; font-size: 13px; opacity: 0; transition: opacity .2s; pointer-events: none; z-index: 50; }
+  .toast.show { opacity: .92; }
+
+  form { display: flex; gap: 10px; padding: 14px 28px 18px; background: var(--bg); align-items: flex-end; }
+  textarea { flex: 1; resize: none; border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; color: var(--ink);
+             font: inherit; background: var(--panel); min-height: 48px; max-height: 180px; }
+  textarea:focus { outline: 2px solid var(--accent-soft); border-color: var(--accent); }
+  form .btn { height: 48px; padding: 0 22px; border-radius: 12px; }
+  .footnote { text-align: center; font-size: 12px; color: var(--muted); padding: 0 0 10px; }
+  .backdrop { display: none; }
+
+  @media (max-width: 860px) {
+    aside { position: fixed; inset: 0 auto 0 0; transform: translateX(-100%); transition: transform .2s; box-shadow: var(--shadow); }
+    body.drawer aside { transform: none; }
+    body.drawer .backdrop { display: block; position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 10; }
+    #menu { display: inline-grid; }
+    header, #messages, form { padding-left: 14px; padding-right: 14px; }
+    header p { display: none; }
+    header h2 { font-size: 16px; }
+    .btn .label-text { display: none; }
+    #new-chat { padding: 9px; }
+    .source .sim { display: none; }
+    .msg { max-width: 100%; }
+  }
+</style>
+</head>
+<body>
+<div class="backdrop" id="backdrop"></div>
+<aside id="sidebar">
+  <div class="brand">
+    <div class="logo" aria-hidden="true">A</div>
+    <div><h1>AskDocs</h1><p>Answers from your documents, with sources</p></div>
+  </div>
+  <div>
+    <p class="label">Knowledge base</p>
+    <ul id="docs"><li><span class="name">Loading…</span></li></ul>
+  </div>
+  <button class="btn block" id="upload-btn" type="button">
+    <svg viewBox="0 0 24 24"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></svg>Upload documents
+  </button>
+  <p class="hint">PDF, Word, Markdown or TXT</p>
+  <input id="upload" type="file" accept=".pdf,.docx,.md,.markdown,.txt" multiple>
+  <div class="status" id="status"></div>
+</aside>
+
+<main>
+  <header>
+    <button class="icon-btn" id="menu" type="button" aria-label="Show documents">
+      <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+    <div class="titles">
+      <h2>Ask your documents</h2>
+      <p>Every answer cites the passages it came from. If the documents don't say, AskDocs says so.</p>
+    </div>
+    <button class="icon-btn" id="theme" type="button" aria-label="Toggle dark mode" title="Toggle dark mode">
+      <svg viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+    </button>
+    <button class="btn" id="new-chat" type="button">
+      <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span class="label-text">New chat</span>
+    </button>
+  </header>
+
+  <section id="messages" aria-live="polite">
+    <div class="empty" id="empty">
+      <h3>What would you like to know?</h3>
+      <div>Ask in plain language. Follow-up questions work too.</div>
+      <div class="chips" id="chips"></div>
+    </div>
+  </section>
+
+  <form id="ask">
+    <label class="sr-only" for="input">Your question</label>
+    <textarea id="input" rows="1" placeholder="Ask a question about your documents…" maxlength="2000"></textarea>
+    <button class="btn primary" id="send" type="submit">
+      <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg><span class="label-text">Send</span>
+    </button>
+  </form>
+  <div class="footnote">Answers come only from the uploaded documents. <a href="https://github.com/24f2006816/askdocs" target="_blank" rel="noopener">Source code</a> · <a href="/docs" target="_blank">API</a></div>
+</main>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+const SUGGESTIONS = [
+  "Can I get a refund if I leave after three weeks?",
+  "When are the doubt-clearing sessions?",
+  "Can I pay the fee in instalments?",
+  "What happens if I miss a mock test?",
+];
+const ICONS = {
+  copy: '<svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg>',
+  up: '<svg viewBox="0 0 24 24"><path d="M7 11v9H4v-9zM7 11l4-8a2 2 0 0 1 3 2l-1 4h6a2 2 0 0 1 2 2.3l-1.3 7A2 2 0 0 1 17.7 20H7"/></svg>',
+  down: '<svg viewBox="0 0 24 24"><path d="M17 13V4h3v9zM17 13l-4 8a2 2 0 0 1-3-2l1-4H5a2 2 0 0 1-2-2.3l1.3-7A2 2 0 0 1 6.3 4H17"/></svg>',
+};
+
+const $ = (s) => document.querySelector(s);
+const store = {
+  get(k) { try { return sessionStorage.getItem(k); } catch (_) { return null; } },
+  set(k, v) { try { v == null ? sessionStorage.removeItem(k) : sessionStorage.setItem(k, v); } catch (_) {} },
+};
+const prefs = {
+  get(k) { try { return localStorage.getItem(k); } catch (_) { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch (_) {} },
+};
+
+let sessionId = store.get("askdocs-session");
+let busy = false;
+let health = {};
+const messages = $("#messages");
+
+// ------------------------------------------------------------------ rendering
+
+function escapeHtml(t) {
+  return String(t).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+function inline(text) {
+  return text
+    .replace(/`([^`]+)`/g, "<code>$1</code>")
+    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    .replace(/(^|\s)_([^_]+)_(?=\s|$|[.,;:!?)])/g, "$1<em>$2</em>")
+    .replace(/\[(\d+)\]/g, '<button type="button" class="cite" data-n="$1" title="Show source $1">$1</button>');
+}
+
+// Escape first, then apply a small, safe subset of Markdown.
+function renderMarkdown(text) {
+  let html = "", list = null;
+  const close = () => { if (list) { html += `</${list}>`; list = null; } };
+  for (const raw of escapeHtml(text).split("\n")) {
+    const bullet = raw.match(/^\s*[-*•]\s+(.*)$/);
+    const numbered = raw.match(/^\s*\d+[.)]\s+(.*)$/);
+    if (bullet || numbered) {
+      const tag = bullet ? "ul" : "ol";
+      if (list !== tag) { close(); html += `<${tag}>`; list = tag; }
+      html += `<li>${inline((bullet || numbered)[1])}</li>`;
+    } else {
+      close();
+      if (raw.trim()) html += `<p>${inline(raw)}</p>`;
+    }
+  }
+  close();
+  return html;
+}
+
+function renderSources(sources) {
+  if (!sources || !sources.length) return "";
+  return '<div class="sources">' + sources.map((s) => `
+    <details class="source ${s.cited ? "cited" : ""}" data-n="${s.n}">
+      <summary><span class="cite">${s.n}</span><span class="loc">${escapeHtml(s.location)}</span>
+        <span class="sim">${s.cited ? "cited · " : ""}similarity ${Number(s.similarity).toFixed(2)}</span></summary>
+      <div class="snippet">${escapeHtml(s.snippet)}</div>
+    </details>`).join("") + "</div>";
+}
+
+function scrollDown() { messages.scrollTop = messages.scrollHeight; }
+
+function toast(text) {
+  const el = $("#toast");
+  el.textContent = text;
+  el.classList.add("show");
+  clearTimeout(toast.timer);
+  toast.timer = setTimeout(() => el.classList.remove("show"), 1800);
+}
+
+function addUser(text) {
+  $("#empty")?.remove();
+  const div = document.createElement("div");
+  div.className = "msg user";
+  div.textContent = text;
+  messages.appendChild(div);
+}
+
+function addBot() {
+  const div = document.createElement("div");
+  div.className = "msg bot";
+  div.innerHTML = '<div class="answer"><span class="thinking">Searching your documents…</span></div>' +
+                  '<div class="rewritten" hidden></div><div class="src"></div><div class="actions" hidden></div>';
+  messages.appendChild(div);
+  scrollDown();
+  return div;
+}
+
+// ------------------------------------------------------------------ streaming
+
+async function* sse(response) {
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    let cut;
+    while ((cut = buffer.indexOf("\n\n")) >= 0) {
+      const block = buffer.slice(0, cut);
+      buffer = buffer.slice(cut + 2);
+      const data = block.split("\n").filter((l) => l.startsWith("data:")).map((l) => l.slice(5).trim()).join("");
+      if (data) yield JSON.parse(data);
+    }
+  }
+}
+
+async function ask(question) {
+  if (busy) return;
+  busy = true;
+  $("#send").disabled = true;
+  addUser(question);
+  const card = addBot();
+  const answerEl = card.querySelector(".answer");
+  let text = "";
+  try {
+    const res = await fetch("/api/chat/stream", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: question, session_id: sessionId }),
+    });
+    if (!res.ok) {
+      const detail = (await res.json().catch(() => ({}))).detail;
+      throw new Error(typeof detail === "string" ? detail : `Request failed (${res.status})`);
+    }
+    for await (const ev of sse(res)) {
+      if (ev.type === "meta") {
+        sessionId = ev.session_id;
+        store.set("askdocs-session", sessionId);
+        if (ev.standalone_question.trim().toLowerCase() !== question.trim().toLowerCase()) {
+          const r = card.querySelector(".rewritten");
+          r.hidden = false;
+          r.textContent = `Searched for: “${ev.standalone_question}”`;
+        }
+        answerEl.classList.add("typing");
+        answerEl.innerHTML = "";
+      } else if (ev.type === "token") {
+        text += ev.text;
+        answerEl.innerHTML = renderMarkdown(text);
+        scrollDown();
+      } else if (ev.type === "done") {
+        finish(card, question, ev);
+      } else if (ev.type === "error") {
+        throw new Error(ev.detail || "Something went wrong.");
+      }
+    }
+  } catch (err) {
+    answerEl.classList.remove("typing");
+    answerEl.innerHTML = `<p>⚠️ ${escapeHtml(err.message || err)}</p>`;
+  } finally {
+    busy = false;
+    $("#send").disabled = false;
+    refreshStatus();
+    scrollDown();
+  }
+}
+
+function finish(card, question, ev) {
+  const answerEl = card.querySelector(".answer");
+  answerEl.classList.remove("typing");
+  answerEl.innerHTML = renderMarkdown(ev.answer);
+  card.classList.toggle("refused", !ev.grounded);
+  if (ev.grounded) card.querySelector(".src").innerHTML = renderSources(ev.sources);
+  const actions = card.querySelector(".actions");
+  actions.hidden = false;
+  const took = ev.latency_ms < 1000 ? `${Math.round(ev.latency_ms)} ms` : `${(ev.latency_ms / 1000).toFixed(1)} s`;
+  actions.innerHTML = `
+    <button class="icon-btn" data-act="copy" title="Copy answer" aria-label="Copy answer">${ICONS.copy}</button>
+    <button class="icon-btn" data-act="up" title="Helpful" aria-label="Helpful">${ICONS.up}</button>
+    <button class="icon-btn" data-act="down" title="Not helpful" aria-label="Not helpful">${ICONS.down}</button>
+    <span class="meta">${took} · ${escapeHtml(ev.mode)}</span>`;
+  card.dataset.question = question;
+  card.dataset.answer = ev.answer;
+}
+
+// Clicking [n] opens and highlights that source; action buttons copy or send feedback.
+messages.addEventListener("click", async (e) => {
+  const cite = e.target.closest("button.cite");
+  if (cite) {
+    const card = cite.closest(".msg.bot");
+    const src = card?.querySelector(`details.source[data-n="${cite.dataset.n}"]`);
+    if (src) {
+      src.open = true;
+      src.classList.add("flash");
+      src.scrollIntoView({ block: "nearest" });
+      setTimeout(() => src.classList.remove("flash"), 1200);
+    }
+    return;
+  }
+  const action = e.target.closest("[data-act]");
+  if (!action) return;
+  const card = action.closest(".msg.bot");
+  if (action.dataset.act === "copy") {
+    try { await navigator.clipboard.writeText(card.dataset.answer.replace(/\s*\[\d+\]/g, "")); toast("Copied"); }
+    catch (_) { toast("Copy is not available here"); }
+    return;
+  }
+  card.querySelectorAll('[data-act="up"],[data-act="down"]').forEach((b) => b.classList.remove("active"));
+  action.classList.add("active");
+  const res = await fetch("/api/feedback", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ session_id: sessionId || "none", question: card.dataset.question,
+                           answer: card.dataset.answer.slice(0, 8000), rating: action.dataset.act }),
+  });
+  toast(res.ok ? "Thanks for the feedback" : "Could not save feedback");
+});
+
+// ------------------------------------------------------------------ sidebar
+
+async function refreshDocs() {
+  const docs = await fetch("/api/documents").then((r) => r.json());
+  $("#docs").innerHTML = docs.length
+    ? docs.map((d) => `<li title="${escapeHtml(d.source)}"><span class="name">${escapeHtml(d.source)}</span>` +
+                      `<span class="count">${d.chunks} chunks</span></li>`).join("")
+    : '<li><span class="name">No documents yet</span></li>';
+}
+
+async function refreshStatus() {
+  health = await fetch("/api/health").then((r) => r.json());
+  const retrieval = `hybrid (${health.embedder} + BM25)${health.reranker ? " + reranker" : ""}`;
+  $("#status").innerHTML = `<div><span class="dot"></span>${health.chunks} chunks indexed</div>
+    <div>Retrieval: ${escapeHtml(retrieval)}</div><div>Answers: ${escapeHtml(health.answer_mode)}</div>
+    ${health.uploads_locked ? "<div>Uploads: admin only</div>" : ""}`;
+}
+
+$("#upload-btn").addEventListener("click", () => {
+  if (health.uploads_locked && !store.get("askdocs-admin")) {
+    const token = window.prompt("Uploads are locked on this demo. Enter the admin token:");
+    if (!token) return;
+    store.set("askdocs-admin", token);
+  }
+  $("#upload").click();
+});
+
+$("#upload").addEventListener("change", async (e) => {
+  const files = [...e.target.files];
+  e.target.value = "";
+  if (!files.length) return;
+  const form = new FormData();
+  files.forEach((f) => form.append("files", f));
+  toast(`Indexing ${files.length} file${files.length > 1 ? "s" : ""}…`);
+  const headers = store.get("askdocs-admin") ? { "X-Admin-Token": store.get("askdocs-admin") } : {};
+  const res = await fetch("/api/documents", { method: "POST", body: form, headers });
+  const body = await res.json().catch(() => ({}));
+  if (res.status === 401) store.set("askdocs-admin", null);
+  toast(res.ok ? `Added ${body.added.join(", ")}` : (body.detail || "Upload failed"));
+  refreshDocs();
+  refreshStatus();
+});
+
+// ------------------------------------------------------------------ controls
+
+function applyTheme(theme) { document.documentElement.dataset.theme = theme; }
+applyTheme(prefs.get("askdocs-theme") || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"));
+$("#theme").addEventListener("click", () => {
+  const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+  applyTheme(next);
+  prefs.set("askdocs-theme", next);
+});
+
+$("#menu").addEventListener("click", () => document.body.classList.add("drawer"));
+$("#backdrop").addEventListener("click", () => document.body.classList.remove("drawer"));
+
+$("#chips").innerHTML = SUGGESTIONS.map((s) => `<button class="chip" type="button">${escapeHtml(s)}</button>`).join("");
+$("#chips").addEventListener("click", (e) => { if (e.target.matches(".chip")) ask(e.target.textContent); });
+
+const input = $("#input");
+if (matchMedia("(max-width: 860px)").matches) input.placeholder = "Ask a question…";
+input.addEventListener("input", () => { input.style.height = "auto"; input.style.height = `${input.scrollHeight}px`; });
+input.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); $("#ask").requestSubmit(); }
+});
+$("#ask").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const question = input.value.trim();
+  if (!question || busy) return;
+  input.value = "";
+  input.style.height = "auto";
+  ask(question);
+});
+
+$("#new-chat").addEventListener("click", async () => {
+  if (sessionId) await fetch(`/api/chat/${sessionId}`, { method: "DELETE" }).catch(() => {});
+  store.set("askdocs-session", null);
+  location.reload();
+});
+
+refreshDocs();
+refreshStatus();
+</script>
+</body>
+</html>

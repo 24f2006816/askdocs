@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+      - run: pip install -r requirements-dev.txt
+      - name: Lint
+        run: ruff check .
+      - name: Tests
+        run: pytest -q
+      - name: Retrieval evaluation (offline hashing embedder)
+        run: EMBEDDER=hash python -m scripts.evaluate
+
+  deploy:
+    # Publishes the live demo to Hugging Face Spaces after tests pass on main.
+    # Skipped until the HF_TOKEN repository secret is added.
+    needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    env:
+      HF_TOKEN: ${{ secrets.HF_TOKEN }}
+      HF_SPACE: ${{ vars.HF_SPACE }}
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      ADMIN_TOKEN: ${{ secrets.ADMIN_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        if: env.HF_TOKEN != ''
+      - uses: actions/setup-python@v5
+        if: env.HF_TOKEN != ''
+        with:
+          python-version: "3.12"
+      - name: Deploy to Hugging Face Spaces
+        if: env.HF_TOKEN != ''
+        run: |
+          pip install huggingface_hub
+          python scripts/deploy_hf_space.py
+      - name: Deployment skipped
+        if: env.HF_TOKEN == ''
+        run: echo "Add an HF_TOKEN repository secret to deploy the demo to Hugging Face Spaces."
