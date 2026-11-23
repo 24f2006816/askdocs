@@ -3,8 +3,11 @@
 [![CI](https://github.com/24f2006816/askdocs/actions/workflows/ci.yml/badge.svg)](https://github.com/24f2006816/askdocs/actions/workflows/ci.yml)
 ![Python](https://img.shields.io/badge/python-3.10%2B-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
+[![Live demo](https://img.shields.io/badge/%F0%9F%A4%97%20live%20demo-Hugging%20Face-yellow)](https://huggingface.co/spaces/24f2006816/askdocs)
 
 **Chat with your documents and get answers you can verify.** AskDocs is a retrieval-augmented generation (RAG) chatbot. Upload PDFs, Word files, Markdown or text and ask questions in plain language. Every answer streams in with citations to the exact file, page or section it came from, and when the documents don't contain the answer, AskDocs says so instead of guessing.
+
+**[Try the live demo →](https://huggingface.co/spaces/24f2006816/askdocs)** (read-only, with a sample student handbook, FAQ and fee policy; the first load can take a minute if the Space was asleep)
 
 ![AskDocs answering a refund question with page-level citations](docs/screenshot.png)
 
@@ -16,7 +19,7 @@
 - **Streaming:** answers arrive token by token over server-sent events, from Gemini or OpenAI.
 - **Conversations:** follow-ups such as "And for the crash course?" are rewritten into standalone questions before searching.
 - **Works without keys or GPUs:** with no LLM key it quotes the best-matching sentences; with no embedding model it falls back to a lexical embedder.
-- **Ready for a public demo:** admin-only uploads, per-client rate limiting, upload validation, request IDs and security headers.
+- **Ready for a public demo:** read-only mode or admin-only uploads, per-client rate limiting, upload validation, request IDs and security headers.
 - **Measured:** an evaluation script reports hit@k, MRR and refusal accuracy on a labelled question set, and CI runs it on every push.
 - **Polished UI:** dark mode, mobile layout, copy button and thumbs up/down feedback, logged for review. No build step and no CDN.
 
