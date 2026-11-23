@@ -154,7 +154,7 @@ The image installs CPU-only PyTorch, downloads the embedding and reranker models
 
 Set the repository variable `HF_SPACE` to deploy under a different name. You can also deploy from your machine with `HF_TOKEN=... make deploy`.
 
-**Hugging Face Spaces without a token.** Create a Docker Space and add the two files in [`deploy/hf-space`](deploy/hf-space). That Dockerfile downloads this repository at build time and runs the app read-only (`ALLOW_UPLOADS=false`). Use *Factory rebuild* in the Space settings to pick up new commits. This is how the public demo runs.
+**Hugging Face Spaces without a token.** Create a free Space (Gradio SDK, CPU basic) and add the files in [`deploy/hf-space`](deploy/hf-space). Its `app.py` downloads this repository at startup and serves the app read-only (`ALLOW_UPLOADS=false`). Restart the Space to pick up new commits. This is how the public demo runs.
 
 ## Security
 

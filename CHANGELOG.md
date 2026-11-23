@@ -3,7 +3,7 @@
 ## 2.0.1
 
 - `ALLOW_UPLOADS=false` makes the app read-only; the UI hides the upload button and says so.
-- `deploy/hf-space`: a token-free Hugging Face Space build that pulls this repository at build time.
+- `deploy/hf-space`: a token-free Hugging Face Space that downloads this repository at startup.
 
 ## 2.0.0
 
