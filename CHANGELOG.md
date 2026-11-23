@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.0.1
+
+- `ALLOW_UPLOADS=false` makes the app read-only; the UI hides the upload button and says so.
+- `deploy/hf-space`: a token-free Hugging Face Space build that pulls this repository at build time.
+
 ## 2.0.0
 
 - Streaming answers over server-sent events (`POST /api/chat/stream`) for Gemini and OpenAI, with a hold-back that keeps the `NOT_FOUND` marker from ever reaching users.

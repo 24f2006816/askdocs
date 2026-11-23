@@ -20,7 +20,7 @@ def settings(tmp_path: Path) -> Settings:
         chunk_size=700, chunk_overlap=120, top_k=4, min_similarity=0.30, min_keyword_coverage=0.30,
         llm_provider="extractive", gemini_api_key=None, gemini_model="unused",
         openai_api_key=None, openai_model="unused", max_history_turns=6,
-        admin_token=None, rate_limit_per_minute=0, max_upload_mb=1,
+        allow_uploads=True, admin_token=None, rate_limit_per_minute=0, max_upload_mb=1,
     )
 
 

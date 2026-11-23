@@ -28,7 +28,7 @@ def parse_sse(text: str) -> list[dict]:
 def test_health_and_documents(client):
     health = client.get("/api/health").json()
     assert health["status"] == "ok" and health["chunks"] > 0 and health["answer_mode"] == "extractive"
-    assert health["uploads_locked"] is False and health["reranker"] is None
+    assert health["uploads_locked"] is False and health["uploads_enabled"] is True and health["reranker"] is None
     names = {d["source"] for d in client.get("/api/documents").json()}
     assert {"faq.txt", "fee-and-refund-policy.pdf", "student-handbook.md"} <= names
 
@@ -96,6 +96,17 @@ def test_admin_token_locks_uploads_and_deletes(settings, embedder):
         assert client.delete("/api/documents/note.txt").status_code == 401
         assert client.delete("/api/documents/note.txt", headers={"X-Admin-Token": "s3cret"}).status_code == 200
         assert client.post("/api/chat", json={"message": "When are the doubt-clearing sessions?"}).status_code == 200
+
+
+def test_uploads_can_be_turned_off(settings, embedder):
+    with make_client(settings, embedder, allow_uploads=False, admin_token="s3cret") as client:
+        assert client.get("/api/health").json()["uploads_enabled"] is False
+        files = {"files": ("note.txt", b"Office hours are on Mondays.", "text/plain")}
+        # Even the admin token can't write when uploads are off.
+        refused = client.post("/api/documents", files=files, headers={"X-Admin-Token": "s3cret"})
+        assert refused.status_code == 403 and "turned off" in refused.json()["detail"]
+        assert client.delete("/api/documents/faq.txt", headers={"X-Admin-Token": "s3cret"}).status_code == 403
+        assert any(d["source"] == "faq.txt" for d in client.get("/api/documents").json())
 
 
 def test_rate_limit(settings, embedder):

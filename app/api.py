@@ -119,6 +119,11 @@ def create_app(settings: Settings | None = None, embedder: Embedder | None = Non
 
     # ----------------------------------------------------------------- status
 
+    def require_write_access(request: Request) -> None:
+        if not settings.allow_uploads:
+            raise HTTPException(403, "Uploads are turned off on this demo. Run AskDocs yourself to use your own files.")
+        check_admin(request, settings.admin_token)
+
     @app.get("/api/health")
     def health() -> dict:
         eng = engine()
@@ -126,7 +131,8 @@ def create_app(settings: Settings | None = None, embedder: Embedder | None = Non
             "status": "ok", "version": __version__, "uptime_seconds": int(time.time() - state["started"]),
             "documents": len(eng.kb.sources()), "chunks": len(eng.kb.chunks),
             "embedder": eng.kb.embedder.name, "reranker": eng.reranker.name if eng.reranker else None,
-            "answer_mode": eng.mode, "uploads_locked": bool(settings.admin_token), "stats": eng.stats.snapshot(),
+            "answer_mode": eng.mode, "uploads_enabled": settings.allow_uploads,
+            "uploads_locked": bool(settings.admin_token), "stats": eng.stats.snapshot(),
         }
 
     # ----------------------------------------------------------------- documents
@@ -137,7 +143,7 @@ def create_app(settings: Settings | None = None, embedder: Embedder | None = Non
 
     @app.post("/api/documents")
     async def upload_documents(request: Request, files: list[UploadFile] = File(...)) -> dict:  # noqa: B008
-        check_admin(request, settings.admin_token)
+        require_write_access(request)
         limit = settings.max_upload_mb * 1024 * 1024
         saved: list[Path] = []
         for upload in files:
@@ -161,7 +167,7 @@ def create_app(settings: Settings | None = None, embedder: Embedder | None = Non
 
     @app.delete("/api/documents/{name}")
     async def delete_document(name: str, request: Request) -> dict:
-        check_admin(request, settings.admin_token)
+        require_write_access(request)
         target = settings.docs_dir / safe_filename(name)
         if not target.is_file():
             raise HTTPException(404, "No such document.")

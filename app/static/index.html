@@ -146,7 +146,7 @@
   <button class="btn block" id="upload-btn" type="button">
     <svg viewBox="0 0 24 24"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></svg>Upload documents
   </button>
-  <p class="hint">PDF, Word, Markdown or TXT</p>
+  <p class="hint" id="upload-hint">PDF, Word, Markdown or TXT</p>
   <input id="upload" type="file" accept=".pdf,.docx,.md,.markdown,.txt" multiple>
   <div class="status" id="status"></div>
 </aside>
@@ -421,7 +421,11 @@ async function refreshStatus() {
   const retrieval = `hybrid (${health.embedder} + BM25)${health.reranker ? " + reranker" : ""}`;
   $("#status").innerHTML = `<div><span class="dot"></span>${health.chunks} chunks indexed</div>
     <div>Retrieval: ${escapeHtml(retrieval)}</div><div>Answers: ${escapeHtml(health.answer_mode)}</div>
-    ${health.uploads_locked ? "<div>Uploads: admin only</div>" : ""}`;
+    ${!health.uploads_enabled ? "<div>Uploads: off on this demo</div>" : health.uploads_locked ? "<div>Uploads: admin only</div>" : ""}`;
+  if (!health.uploads_enabled) {
+    $("#upload-btn").style.display = "none";
+    $("#upload-hint").innerHTML = 'Read-only demo. <a href="https://github.com/24f2006816/askdocs" target="_blank" rel="noopener">Run it yourself</a> to use your own files.';
+  }
 }
 
 $("#upload-btn").addEventListener("click", () => {

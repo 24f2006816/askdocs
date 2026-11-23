@@ -25,6 +25,13 @@ def _int(name: str, default: int) -> int:
     return int(os.getenv(name, str(default)))
 
 
+def _bool(name: str, default: bool) -> bool:
+    value = os.getenv(name)
+    if value is None or not value.strip():
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
+
 def _float(name: str, default: float) -> float:
     return float(os.getenv(name, str(default)))
 
@@ -61,6 +68,7 @@ class Settings:
     openai_model: str
     max_history_turns: int
     # Public deployment
+    allow_uploads: bool  # False turns uploads and deletes off entirely (read-only public demo)
     admin_token: str | None  # when set, uploads and deletes need this token
     rate_limit_per_minute: int  # per client, for chat and feedback; 0 disables
     max_upload_mb: int
@@ -87,6 +95,7 @@ class Settings:
             openai_api_key=os.getenv("OPENAI_API_KEY") or None,
             openai_model=os.getenv("OPENAI_MODEL", "gpt-6-luna"),
             max_history_turns=_int("MAX_HISTORY_TURNS", 6),
+            allow_uploads=_bool("ALLOW_UPLOADS", True),
             admin_token=os.getenv("ADMIN_TOKEN") or None,
             rate_limit_per_minute=_int("RATE_LIMIT_PER_MINUTE", 30),
             max_upload_mb=_int("MAX_UPLOAD_MB", 10),
