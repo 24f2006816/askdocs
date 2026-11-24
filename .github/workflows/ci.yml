@@ -25,6 +25,31 @@ jobs:
       - name: Retrieval evaluation (offline hashing embedder)
         run: EMBEDDER=hash python -m scripts.evaluate
 
+  eval-neural:
+    # Scores the real MiniLM embedder and cross-encoder reranker (needs model downloads).
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install torch --index-url https://download.pytorch.org/whl/cpu
+      - run: pip install -r requirements-dev.txt -r requirements-embeddings.txt
+      - name: Retrieval evaluation (MiniLM + cross-encoder reranker)
+        env:
+          EMBEDDER: sentence-transformers
+          RERANKER_MODEL: cross-encoder/ms-marco-MiniLM-L-6-v2
+        run: |
+          python -m scripts.evaluate --sweep | tee eval.md
+          cat eval.md >> "$GITHUB_STEP_SUMMARY"
+          python -m scripts.evaluate --json > eval.json
+          echo "::notice title=eval-json::$(python -c 'import json;print(json.dumps(json.load(open("eval.json")),separators=(",",":")))')"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: eval-neural
+          path: eval.*
+
   deploy:
     # Publishes the live demo to Hugging Face Spaces after tests pass on main.
     # Skipped until the HF_TOKEN repository secret is added.
