@@ -73,7 +73,18 @@ The sample documents describe **Northstar Academy, a fictional coaching institut
 
 `python -m scripts.evaluate --sweep` runs 30 labelled questions (each tagged with the file and page or section that answers it) and 6 out-of-scope questions.
 
-Measured in this repository with the offline hashing embedder (`EMBEDDER=hash`) on 15 chunks:
+With the neural models (`all-MiniLM-L6-v2` embeddings, `ms-marco-MiniLM-L-6-v2` cross-encoder), measured by the `eval-neural` CI job:
+
+| Retrieval | Hit@1 | Hit@3 | Hit@5 | MRR |
+| --- | --- | --- | --- | --- |
+| Dense only (MiniLM) | 63% | 90% | 97% | 0.772 |
+| BM25 only | 83% | 93% | 97% | 0.892 |
+| Hybrid (RRF) | 87% | 100% | 100% | 0.928 |
+| **Hybrid + cross-encoder rerank** | **97%** | **100%** | **100%** | **0.983** |
+
+With MiniLM at the default thresholds, 67% of out-of-scope questions (4 of 6) are refused and no in-scope question is wrongly refused; `--sweep` shows the trade-off for stricter settings. The set is small (30 + 6 questions), so treat these as a regression check rather than a benchmark.
+
+With the offline hashing embedder (no model download):
 
 | Retrieval | Hit@1 | Hit@3 | Hit@5 | MRR |
 | --- | --- | --- | --- | --- |
@@ -85,7 +96,7 @@ Measured in this repository with the offline hashing embedder (`EMBEDDER=hash`) 
 - In-scope questions wrongly refused: 3% (1 of 30).
 - Average search time: 0.1 ms per query.
 
-Hybrid retrieval puts the right passage in the top 3 for 97% of questions, and the top 4 passages are what the LLM reads. The hashing embedder is a lexical lower bound. With `requirements-embeddings.txt` installed, the script also scores MiniLM embeddings and, when `RERANKER_MODEL` is set, a `hybrid+rerank` row. `--sweep` prints the refusal trade-off across thresholds, so `MIN_SIMILARITY` and `MIN_KEYWORD_COVERAGE` can be calibrated for any embedder.
+Reranking moves the right passage to first place for 97% of questions, up from 63% with embeddings alone. The top 4 passages are what the LLM reads. The hashing embedder is a lexical lower bound. With `requirements-embeddings.txt` installed, the script also scores MiniLM embeddings and, when `RERANKER_MODEL` is set, a `hybrid+rerank` row. `--sweep` prints the refusal trade-off across thresholds, so `MIN_SIMILARITY` and `MIN_KEYWORD_COVERAGE` can be calibrated for any embedder.
 
 ## How it works
 
